@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+  <head>
+    <title>CLAWNALYST - Feral Combatlog Analyzer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css?family=Bitter|Roboto|Roboto+Mono" rel="stylesheet"> 
+  </head>
+  <body>
+    <a href="/" class="logo-large"><img src="/images/logo.png"></a>
+    <div class="welcome">
+      <div class="box">
+        <center><h1>Welcome to CLAWNALYST</h1></center>
+        <p>CLAWNALYST is a website designed to help you improve your Feral druid's DPS.<br> Give us a WarcraftLogs.com link, and we will scan the fight for potential issues.</p>
+        <p>To get started, simply paste a link to the fight into this field:</p>
+        <input id="link" placeholder="Paste your WarcraftLogs.com URL here...">
+        <p>Don't have a link ready? Check out this <a href="/CNbJ3zHPQGmLnxrp_13.html">example result</a>!</p> 
+      </div>
+      <div class="loadstatus box hide">
+        <center><h1>Loading...</h1></center>
+        <pre></pre>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>© 2016 CLAWNALYST</span> - <a href="http://www.warcraftlogs.com">powered by Warcraft Logs</a> - <a href="https://discord.gg/5eq564A">Chat on the Druid Discord</a>
+    </div>
+
+  <div id="userSelect" class="modal">
+    <div class="modal-content">
+      <h4>Found Multiple Ferals, select one:</h4>
+    </div>
+  </div>
+
+  </body>
+  <script src="/socket.io/socket.io.js"></script>
+  <script
+  src="https://code.jquery.com/jquery-2.2.4.min.js"
+  integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+  crossorigin="anonymous"></script>
+  <script src="script.js"></script>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-23677622-4', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+</html>

@@ -1,0 +1,329 @@
+{% macro uptimeColors(uptime, t1=95, t2=90, t3=85, optional=false) %}
+  {% if optional and not uptime>0 %}
+    {%set class = "blue" %}
+  {% elif uptime > t1 %}
+    {% set class = "green" %}
+  {% elif uptime > t2 %}
+    {% set class = "yellow" %}
+  {% elif uptime > t3 %}
+    {%set class = "orange" %}
+  {% else %}
+    {%set class = "red" %}
+  {%endif%}
+  {% if uptime == 100 %}
+    {% set uptime = 100.00 %}
+  {% else %}
+    {% set uptime = ([uptime, ".00"]|join)|truncate(5,true,"") %}
+  {% endif %}
+
+  <td class="{{class}} percentage">{{uptime}}%</td>
+{% endmacro %}
+
+{% macro totalColors(a, b, t1=0, t2=1, t3=2, optional=false) %}
+  {% set r = b-a %}
+  {% if optional and a==0 %}
+    {%set class = "blue" %}
+  {% elif r <= t1 %}
+    {% set class = "green" %}
+  {% elif r <= t2 %}
+    {% set class = "yellow" %}
+  {% elif r <= t3 %}
+    {%set class = "orange" %}
+  {% else %}
+    {%set class = "red" %}
+  {%endif%}
+
+  <td class="{{class}} casts">{{a}} / {{b}}</td>
+{% endmacro %}
+
+
+{% macro doubleColors(a, b, t1=90, t2=80, t3=70) %}
+  {% set pct = (100*a / (a+b))|round(2) %}
+  {% if a == 0 %} {% set pct = 0 %} {% endif %}
+  {% if optional and pct==0 %}
+    {%set class = "blue" %}
+  {% elif pct > t1 %}
+    {% set class = "green" %}
+  {% elif pct > t2 %}
+    {% set class = "yellow" %}
+  {% elif pct > t3 %}
+    {%set class = "orange" %}
+  {% else %}
+    {%set class = "red" %}
+  {%endif%}
+  {% if pct == 100 %}
+    {% set pct = "100.00" %}
+  {% else %}
+    {% set pct = ([pct|string, ".00"]|join)|truncate(5,true,"") %}
+  {% endif %}
+  <td class="{{class}} casts">{{a}} / {{a+b}}</td>
+  <td class="{{class}} percentage">{{pct}}%</td>
+{%endmacro%}
+<!doctype html>
+<html>
+  <head>
+    <title>CLAWNALYST - Feral Combatlog Analyzer</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css?family=Bitter|Roboto|Roboto+Mono" rel="stylesheet"> 
+    <script type="text/javascript" src="//wow.zamimg.com/widgets/power.js"></script><script>var wowhead_tooltips = { "colorlinks": false, "iconizelinks": true, "renamelinks": true }</script>
+
+  </head>
+  <body>
+    <div class="container">
+      <a href="/" class="logo-large"><img src="/images/logo.png"></a>
+      <center><h1 style="opacity: 0">Results</h1></center>
+      
+      <div class="row" style="opacity: 0">
+        <div class="col-lg-4">
+          <div class="col-lg-12 darkbox">
+            <h4>Character</h4>
+            <p>Name: {{feral.name}}</p>
+            <p>Talents:</p>
+            {%for t in feral.info.talents %}
+              <a href="#" rel="spell={{t}}"></a><br>
+            {%endfor%}
+            <hr>
+            <p>Boss: {{boss}}<br>
+            {% set minutes = (duration/60000)|round(0, "floor") %}
+            {% set seconds = ((duration/1000)|round(0))-(minutes*60) %}
+            Fight Length: {{minutes}}:{{seconds}} minutes
+            <p><a class="bluelink" href="{{link}}" target="_blank">Original Log</a></p>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="row">
+            <div class="col-lg-6">
+              <div class="col-lg-12 darkbox">
+                <h4>Uptimes</h4>
+                <table style="width: 100%">
+                  <tr>
+                    <th>Spell</th>
+                    <th style="text-align: right;">Uptime%</th>
+                    <!--th>Info</th-->
+                    <th></th>
+                  </tr>
+                  <tr>
+                    <td><a href="#" rel="spell=1079">Rip</a></td>
+                    {{uptimeColors(feral.rip.pctUptime|round(2))}}
+                    <td class="tt" data-toggle="popover" data-placement="right" data-content="Our main damage ability. Aim for 95% or higher.">(?)</td>
+                  </tr>
+                  <tr>
+                    <td><a href="#" rel="spell=1822">Rake</a></td>
+                    {{uptimeColors(feral.rake.pctUptime|round(2))}}
+                    <td class="tt" data-toggle="tooltip" data-placement="right" data-content="Our second damage ability. Aim for 95% or higher.">(?)</td>
+                  </tr>
+                  <tr>
+                    <td><a href="#" rel="spell=155625">Moonfire</a></td>
+                    {{uptimeColors(feral.moonfire.pctUptime|round(2), optional=true)}}
+                    <td class="tt" data-toggle="tooltip" data-placement="right" data-content="If you selected the Lunar Inspiration, aim for 95% or higher.">(?)</td>
+                  </tr>
+                  <tr>
+                    <td><a href="#" rel="spell=52610">Savage Roar</a></td>
+                    {{uptimeColors(feral.savageroar.pctUptime|round(2), 90, 85, 80)}}
+                    <td class="tt" data-toggle="tooltip" data-placement="right" data-content="Increases the damage of all other spells. You can afford some downtime if you don't use important spells during it, see Benefits Section for more details. Aim for 90% or higher">(?)</td>
+                  </tr>
+                  <tr>
+                    <td><a href="#" rel="spell=210705">Ashamane's Rip</a></td>
+                    {{uptimeColors(feral.asharip.pctUptime|round(2), 40, 30, 20)}}
+                    <td class="tt" data-toggle="tooltip" data-placement="right" data-content="Uptime on this one is mostly random, but you can influence it with pooling and refreshing Rip early. Should be around 40-45%">(?)</td>
+                </table>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="col-lg-12 darkbox">
+                <h4>Consumables</h4>
+                <ul>
+                  {% if feral.flask %}
+                    <li class="green">Flask active</li>
+                  {% else %}
+                    <li class="red">No Flask consumed!</li>
+                  {%endif%}
+                  {%if feral.bufffood %}
+                    <li class="green">Buff Food active</li>
+                  {%else%}
+                    <li class="red">No Buff Food consumed!</li>
+                  {%endif%}
+                  {% if feral.prolongedpower>0 %}
+                    <li class="green">Potion of Prolonged Power ({{feral.prolongedpower}}x)</li>
+                  {% elif feral.oldwar>0%}
+                    <li class="green">Potion of the Old War ({{feral.oldwar}}x)</li>
+                  {% else %}
+                    <li class="red">No Potion!</li>
+                  {% endif %}
+                </ul>
+              </div>
+            </div>
+          </div><br>
+          <div class="row">
+            <div class="col-lg-6">
+              <div class="col-lg-12 darkbox">
+                <h4>Cooldowns</h4>
+                <table style="width: 100%">
+                  <tr>
+                    <th>Spell</th>
+                    <th>Casts</th>
+                    <th></th>
+                  </tr>
+                  <tr>
+                    <td><a href="#" rel="spell=5217">Tiger's Fury</a></td>
+                    {{totalColors(feral.cooldowns[5217][0], feral.cooldowns[5217][1])}}
+                    <td class="tt" data-toggle="tooltip" data-placement="right" data-content="Big source of our energy, should be used on cooldown if it doesn't cap your energy.">(?)</td>
+                  </tr>
+                  <tr>
+                    <td><a href="#" rel="spell=210722">Ashamane's Frenzy</a></td>
+                    {{totalColors(feral.cooldowns[210722][0], feral.cooldowns[210722][1])}}
+                  </tr>
+                  <tr>
+                    <td><a href="#" rel="spell=106951">Berserk</a></td>
+                    {{totalColors(feral.cooldowns[106951][0], feral.cooldowns[106951][1])}}
+                  </tr>
+                  <tr>
+                    <td><a href="#" rel="spell=58984">Shadowmeld</a> (Night Elf)</td>
+                    {{totalColors(feral.cooldowns[58984][0], feral.cooldowns[58984][1], optional=true)}}
+                    <td class="tt" data-toggle="tooltip" data-placement="right" data-content="Night Elf Racial. If you're a Night Elf, you can use it to cast Rake from stealth, causing it to deal 200% damage.">(?)</td>
+                  </tr>
+                  <tr>
+                    <td><a href="#" rel="spell=26297">Berserking</a> (Troll)</td>
+                    {{totalColors(feral.cooldowns[26297][0], feral.cooldowns[26297][1], optional=true)}}
+                    <td class="tt" data-toggle="tooltip" data-placement="right" data-content="Troll Racial. Use it if you're playing a Troll.">(?)</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="col-lg-12 darkbox">
+                <h4>Combo Points</h4>
+                <p>Coming Soon</p>
+              </div>
+            </div>
+          </div><br>
+        </div>
+      </div>
+      <div class="row" style="opacity: 0">
+        <div class="col-lg-4">
+          <div class="col-lg-12 darkbox">
+            <h4>Bloodtalons Benefits</h4>
+            <table style="width: 100%">
+              <tr>
+                <th>Spell</th>
+                <th>Casts</th>
+                <th style="text-align: right;">Benefit%</th>
+                <th></th>
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=1079">Rip</a></td>
+                {{doubleColors(feral.bloodtalons.benefit.Rip, feral.bloodtalons.nobenefit.Rip)}}
+                <td class="tt" data-toggle="tooltip" data-placement="right" data-content="The amount of Rip casts with a Bloodtalon buff. Apart from the first Rip in the encounter, every other Rip should be buffed by Bloodtalons. Not doing so is a major damage loss.">(?)</td>
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=1822">Rake</a></td>
+                {{doubleColors(feral.bloodtalons.benefit.Rake, feral.bloodtalons.nobenefit.Rake, 40,30,20)}}
+                <td class="tt" data-toggle="tooltip" data-placement="right" data-content="Just like with Rip, every Rake should have a Bloodtalons buff.">(?)</td>
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=210722">Ashamane's Frenzy</a></td>
+                {{doubleColors(feral.bloodtalons.benefit["Ashamane's Frenzy"], feral.bloodtalons.nobenefit["Ashamane's Frenzy"])}}</td>
+                <td class="tt" data-toggle="tooltip" data-placement="right" data-content="Just like the others, not buffing this ability with Bloodtalons is a major damage loss.">(?)</td>
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=22568">Ferocious Bite</a></td>
+                {{doubleColors(feral.bloodtalons.benefit["Ferocious Bite"], feral.bloodtalons.nobenefit["Ferocious Bite"])}}
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=5221">Shred</a></td>
+                {{doubleColors(feral.bloodtalons.benefit.Shred, feral.bloodtalons.nobenefit.Shred, 35, 30, 20)}}
+                <td class="tt" data-toggle="tooltip" data-placement="right" data-content="You shouldn't actively aim to buff Shred casts with BT unless you have the legendary boots.">(?)</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="col-lg-12 darkbox">
+            <h4>Savage Roar Benefits <span class="tt" data-toggle="tooltip" data-placement="right" data-content="Looking at which abilities benefitted from Savage Roar is a better measure of performance than just looking at its uptime.">(?)</span></h4>
+            <table style="width: 100%">
+              <tr>
+                <th>Spell</th>
+                <th>Casts</th>
+                <th style="text-align: right;">Benefit%</th>
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=1079">Rip</a></td>
+                {{doubleColors(feral.sr.benefit.Rip, feral.sr.nobenefit.Rip)}}
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=1822">Rake</a></td>
+                {{doubleColors(feral.sr.benefit.Rake, feral.sr.nobenefit.Rake)}}
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=210722">Ashamane's Frenzy</a></td>
+                {{doubleColors(feral.sr.benefit["Ashamane's Frenzy"], feral.sr.nobenefit["Ashamane's Frenzy"])}}</td>
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=22568">Ferocious Bite</a></td>
+                {{doubleColors(feral.sr.benefit["Ferocious Bite"], feral.sr.nobenefit["Ferocious Bite"])}}
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=155625">Moonfire</a></td>
+                {{doubleColors(feral.sr.benefit.Moonfire, feral.sr.nobenefit.Moonfire, optional=true)}}
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=5221">Shred</a></td>
+                {{doubleColors(feral.sr.benefit.Shred, feral.sr.nobenefit.Shred)}}
+              </tr>
+            </table>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="col-lg-12 darkbox">
+            <h4>Tiger's Fury Benefits <span class="tt" data-toggle="tooltip" data-placement="right" data-content="I don't have good metrics on what these numbers should be. It's a good idea to try and buff as many Rips, Rakes and AFs as you can with TF though.">(?)</span></h4>
+            <table style="width: 100%">
+              <tr>
+                <th>Spell</th>
+                <th>Casts</th>
+                <th style="text-align: right;">Benefit%</th>
+                <th></th>
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=1079">Rip</a></td>
+                {{doubleColors(feral.tf.benefit.Rip, feral.tf.nobenefit.Rip, 50,40,35)}}
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=1822">Rake</a></td>
+                {{doubleColors(feral.tf.benefit.Rake, feral.tf.nobenefit.Rake, 40,30,20)}}
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=210722">Ashamane's Frenzy</a></td>
+                {{doubleColors(feral.tf.benefit["Ashamane's Frenzy"], feral.tf.nobenefit["Ashamane's Frenzy"],50,40,35)}}</td>
+                 <td class="tt" data-toggle="tooltip" data-placement="right" data-content="Ashamane's Frenzy will not snapshot with Tiger's Fury, like our other bleeds. It will update its damage when the TF buff falls off, so try to cast AF early into the buff duration.">(?)</td>
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=22568">Ferocious Bite</a></td>
+                {{doubleColors(feral.tf.benefit["Ferocious Bite"], feral.tf.nobenefit["Ferocious Bite"],30,20,10)}}
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=155625">Moonfire</a></td>
+                {{doubleColors(feral.tf.benefit.Moonfire, feral.tf.nobenefit.Moonfire,30,20,10, optional=true)}}
+              </tr>
+              <tr>
+                <td><a href="#" rel="spell=5221">Shred</a></td>
+                {{doubleColors(feral.tf.benefit.Shred, feral.tf.nobenefit.Shred,40,30,20)}}
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>© 2016 CLAWNALYST</span> - <a href="http://www.warcraftlogs.com">powered by Warcraft Logs</a> - <a href="https://discord.gg/5eq564A">Chat on the Druid Discord</a>
+    </div>
+  </body>
+  <script src="/socket.io/socket.io.js"></script>
+  <script
+  src="https://code.jquery.com/jquery-2.2.4.min.js"
+  integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+  crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <script src="/results.js"></script>
+</html>
